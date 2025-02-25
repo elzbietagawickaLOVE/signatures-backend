@@ -33,6 +33,7 @@ RUN npm ci --only=production
 
 # Set environment variables
 ENV PORT=8080
+ENV HOST=0.0.0.0
 
 # Add health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
@@ -45,6 +46,6 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     req.on('error', (err) => process.exit(1)); \
     req.end();"
 
-# Expose the correct port
+# Expose the port
 EXPOSE 8080
 CMD [ "node", "index.js" ]
