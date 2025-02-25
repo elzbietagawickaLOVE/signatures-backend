@@ -1,22 +1,17 @@
 # syntax = docker/dockerfile:1
 
-# Adjust NODE_VERSION as desired
 ARG NODE_VERSION=20.18.0
 FROM node:${NODE_VERSION}-slim AS base
 
 LABEL fly_launch_runtime="Node.js"
 
-# Node.js app lives here
 WORKDIR /app
-
-# Set production environment
 ENV NODE_ENV="production"
 
-
-# Throw-away build stage to reduce size of final image
+# Throw-away build stage
 FROM base AS build
 
-# Install packages needed to build node modules
+# Install build dependencies
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python-is-python3
 
@@ -27,13 +22,29 @@ RUN npm ci
 # Copy application code
 COPY . .
 
-
-# Final stage for app image
+# Final stage
 FROM base
 
 # Copy built application
 COPY --from=build /app /app
 
-# Start the server by default, this can be overwritten at runtime
-EXPOSE 3000
-CMD [ "npm", "run", "start" ]
+# Install production dependencies only
+RUN npm ci --only=production
+
+# Set environment variables
+ENV PORT=8080
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD node -e "const http = require('http'); \
+    const options = { host: 'localhost', port: 8080, path: '/health' }; \
+    const req = http.request(options, (res) => { \
+    if (res.statusCode == 200) { process.exit(0); } \
+    process.exit(1); \
+    }); \
+    req.on('error', (err) => process.exit(1)); \
+    req.end();"
+
+# Expose the correct port
+EXPOSE 8080
+CMD [ "node", "index.js" ]
