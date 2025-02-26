@@ -24,7 +24,7 @@ const authMiddleware = async (req, res, next) => {
       maxAge: "1h",
     });
 
-    if (!decoded.userId) {
+    if (!decoded.id) {
       return res.status(401).json({
         success: false,
         message: "Invalid token payload",

@@ -10,11 +10,10 @@ async function initializeDatabase() {
   try {
     transaction = await beginTransaction();
 
-    // Drop tables if they exist (split into separate queries)
     await executeQuery(
       `
-      IF OBJECT_ID('dbo.signatures', 'U') IS NOT NULL 
-        DROP TABLE dbo.signatures;
+      IF OBJECT_ID('dbo.packages', 'U') IS NOT NULL 
+        DROP TABLE dbo.packages;
     `,
       {},
       transaction
@@ -31,10 +30,9 @@ async function initializeDatabase() {
 
     console.log("Existing tables dropped");
 
-    // Create signatures table
     await executeQuery(
       `
-      CREATE TABLE dbo.signatures (
+      CREATE TABLE dbo.packages (
         id INT IDENTITY(1,1) PRIMARY KEY,
         package_number NVARCHAR(100) NOT NULL UNIQUE,
         signature VARBINARY(MAX),
@@ -45,19 +43,17 @@ async function initializeDatabase() {
       transaction
     );
 
-    // Create index separately
     await executeQuery(
       `
       CREATE INDEX idx_package_number 
-      ON dbo.signatures(package_number)
+      ON dbo.packages(package_number)
     `,
       {},
       transaction
     );
 
-    console.log("Signatures table initialized");
+    console.log("Packages table initialized");
 
-    // Create users table
     await executeQuery(
       `
       CREATE TABLE dbo.users (
@@ -73,7 +69,6 @@ async function initializeDatabase() {
       transaction
     );
 
-    // Create index separately
     await executeQuery(
       `
       CREATE INDEX idx_username 
