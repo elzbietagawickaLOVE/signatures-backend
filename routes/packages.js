@@ -3,6 +3,7 @@ const { executeQuery } = require("../utils/sqlHelper");
 const { body, validationResult } = require("express-validator");
 const router = express.Router();
 const authMiddleware = require("../middleware/auth");
+const { decrypt, encrypt } = require("../utils/encryption");
 
 const handleDatabaseError = (err, res) => {
   console.error("Database error:", err);
@@ -39,28 +40,6 @@ const validateSignature = [
 
 router.get("/", async (req, res) => {
   const query = `
-    SELECT id, package_number FROM packages`;
-
-  try {
-    const results = await executeQuery(query);
-    if (!results?.length) {
-      return res.status(404).json({
-        success: false,
-        message: "No packages found.",
-      });
-    }
-
-    return res.json({
-      success: true,
-      data: results,
-    });
-  } catch (err) {
-    return handleDatabaseError(err, res);
-  }
-});
-
-router.get("/signatures", async (req, res) => {
-  const query = `
       SELECT id, package_number, signature FROM packages`;
 
   try {
@@ -74,7 +53,11 @@ router.get("/signatures", async (req, res) => {
 
     return res.json({
       success: true,
-      data: results,
+      data: results.map((result) => ({
+        signature: result.signature ? decrypt(result.signature) : null,
+        package_number: result.package_number,
+        id: result.id,
+      })),
     });
   } catch (err) {
     return handleDatabaseError(err, res);
@@ -118,7 +101,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const { package_number } = req.query;
+  const { package_number } = req.body;
 
   if (!package_number?.trim()) {
     return res.status(400).json({
@@ -154,7 +137,10 @@ router.put("/", validateSignature, async (req, res) => {
       `;
 
   try {
-    const result = await executeQuery(query, { package_number, signature });
+    const result = await executeQuery(query, {
+      package_number,
+      signature: encrypt(signature),
+    });
 
     if (!result || result.length === 0) {
       return res.status(404).json({

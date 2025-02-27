@@ -35,7 +35,7 @@ async function initializeDatabase() {
       CREATE TABLE dbo.packages (
         id INT IDENTITY(1,1) PRIMARY KEY,
         package_number NVARCHAR(100) NOT NULL UNIQUE,
-        signature VARBINARY(MAX),
+        signature NVARCHAR(MAX),
         created_at DATETIME DEFAULT GETDATE()
       )
     `,
