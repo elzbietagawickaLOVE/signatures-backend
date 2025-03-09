@@ -12,8 +12,17 @@ async function initializeDatabase() {
 
     await executeQuery(
       `
-      IF OBJECT_ID('dbo.packages', 'U') IS NOT NULL 
-        DROP TABLE dbo.packages;
+      IF OBJECT_ID('dbo.shipments', 'U') IS NOT NULL 
+        DROP TABLE dbo.shipments;
+    `,
+      {},
+      transaction
+    );
+
+    await executeQuery(
+      `
+      IF OBJECT_ID('dbo.receipts', 'U') IS NOT NULL 
+        DROP TABLE dbo.receipts;
     `,
       {},
       transaction
@@ -30,12 +39,13 @@ async function initializeDatabase() {
 
     console.log("Existing tables dropped");
 
+    // Fixed timezone calculation: Start with UTC and convert to Warsaw
     await executeQuery(
       `
       CREATE TABLE dbo.shipments (
         id INT IDENTITY(1,1) PRIMARY KEY,
         signature NVARCHAR(MAX),
-        created_at DATETIME DEFAULT GETDATE()
+        created_at DATETIMEOFFSET DEFAULT (GETUTCDATE() AT TIME ZONE 'UTC' AT TIME ZONE 'Central European Standard Time')
       )
     `,
       {},
@@ -44,14 +54,15 @@ async function initializeDatabase() {
 
     console.log("Shipments table initialized");
 
+    // Fixed timezone calculation: Start with UTC and convert to Warsaw
     await executeQuery(
       `
       CREATE TABLE dbo.receipts (
         id INT IDENTITY(1,1) PRIMARY KEY,
         package_number NVARCHAR(100) NOT NULL UNIQUE,
-        signed_at DATETIME,
+        signed_at DATETIMEOFFSET,
         signature NVARCHAR(MAX),
-        created_at DATETIME DEFAULT GETDATE()
+        created_at DATETIMEOFFSET DEFAULT (GETUTCDATE() AT TIME ZONE 'UTC' AT TIME ZONE 'Central European Standard Time')
       )
     `,
       {},
@@ -69,6 +80,7 @@ async function initializeDatabase() {
 
     console.log("Receipts table initialized");
 
+    // Fixed timezone calculation: Start with UTC and convert to Warsaw
     await executeQuery(
       `
       CREATE TABLE dbo.users (
@@ -76,8 +88,8 @@ async function initializeDatabase() {
         username VARCHAR(50) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
         role VARCHAR(20) NOT NULL DEFAULT 'user',
-        created_at DATETIME DEFAULT GETDATE(),
-        last_login DATETIME
+        created_at DATETIMEOFFSET DEFAULT (GETUTCDATE() AT TIME ZONE 'UTC' AT TIME ZONE 'Central European Standard Time'),
+        last_login DATETIMEOFFSET
       )
     `,
       {},

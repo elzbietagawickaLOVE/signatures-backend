@@ -44,12 +44,6 @@ router.get("/", async (req, res) => {
 
   try {
     const results = await executeQuery(query);
-    if (!results?.length) {
-      return res.status(404).json({
-        success: false,
-        message: "No packages found.",
-      });
-    }
 
     return res.json({
       success: true,
@@ -132,7 +126,7 @@ router.put("/", validateSignature, async (req, res) => {
 
   const query = `
         UPDATE receipts
-        SET signature = @signature, signed_at = GETDATE()
+        SET signature = @signature, signed_at = GETUTCDATE() AT TIME ZONE 'UTC' AT TIME ZONE 'Central European Standard Time'
         OUTPUT INSERTED.*
         WHERE package_number = @package_number;
       `;
