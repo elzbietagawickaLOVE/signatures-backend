@@ -89,7 +89,7 @@ router.post("/", async (req, res) => {
   const { signature } = req.body;
 
   const query = `
-      INSERT INTO receipts (signature) 
+      INSERT INTO shipments (signature) 
       VALUES (@signature);
     `;
 
