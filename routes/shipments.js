@@ -88,13 +88,6 @@ router.delete("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
   const { signature } = req.body;
 
-  if (!package_number?.trim()) {
-    return res.status(400).json({
-      success: false,
-      error: "Package number parameter is required",
-    });
-  }
-
   const query = `
       INSERT INTO receipts (signature) 
       VALUES (@signature);
