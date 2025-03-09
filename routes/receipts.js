@@ -40,7 +40,7 @@ const validateSignature = [
 
 router.get("/", async (req, res) => {
   const query = `
-      SELECT id, package_number, signature FROM packages`;
+      SELECT id, package_number, signature, signed_at FROM receipts`;
 
   try {
     const results = await executeQuery(query);
@@ -56,6 +56,7 @@ router.get("/", async (req, res) => {
       data: results.map((result) => ({
         signature: result.signature ? decrypt(result.signature) : null,
         package_number: result.package_number,
+        signed_at: result.signed_at,
         id: result.id,
       })),
     });
@@ -75,7 +76,7 @@ router.delete("/:id", async (req, res) => {
   }
 
   const query = `
-      DELETE FROM packages 
+      DELETE FROM receipts 
       OUTPUT DELETED.*
       WHERE id = @id;
     `;
@@ -111,7 +112,7 @@ router.post("/", async (req, res) => {
   }
 
   const query = `
-      INSERT INTO packages (package_number) 
+      INSERT INTO receipts (package_number) 
       VALUES (@package_number);
       SELECT * FROM packages WHERE package_number = @package_number;
     `;
@@ -130,8 +131,8 @@ router.put("/", validateSignature, async (req, res) => {
   const { package_number, signature } = req.body;
 
   const query = `
-        UPDATE packages
-        SET signature = @signature
+        UPDATE receipts
+        SET signature = @signature, signed_at = GETDATE()
         OUTPUT INSERTED.*
         WHERE package_number = @package_number;
       `;

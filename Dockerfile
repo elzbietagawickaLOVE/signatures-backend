@@ -35,17 +35,6 @@ RUN npm ci --only=production
 ENV PORT=8080
 ENV HOST=0.0.0.0
 
-# Add health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD node -e "const http = require('http'); \
-    const options = { host: 'localhost', port: 8080, path: '/health' }; \
-    const req = http.request(options, (res) => { \
-    if (res.statusCode == 200) { process.exit(0); } \
-    process.exit(1); \
-    }); \
-    req.on('error', (err) => process.exit(1)); \
-    req.end();"
-
 # Expose the port
 EXPOSE 8080
 CMD [ "node", "index.js" ]

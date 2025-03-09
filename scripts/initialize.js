@@ -32,9 +32,24 @@ async function initializeDatabase() {
 
     await executeQuery(
       `
-      CREATE TABLE dbo.packages (
+      CREATE TABLE dbo.shipments (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        signature NVARCHAR(MAX),
+        created_at DATETIME DEFAULT GETDATE()
+      )
+    `,
+      {},
+      transaction
+    );
+
+    console.log("Shipments table initialized");
+
+    await executeQuery(
+      `
+      CREATE TABLE dbo.receipts (
         id INT IDENTITY(1,1) PRIMARY KEY,
         package_number NVARCHAR(100) NOT NULL UNIQUE,
+        signed_at DATETIME,
         signature NVARCHAR(MAX),
         created_at DATETIME DEFAULT GETDATE()
       )
@@ -46,13 +61,13 @@ async function initializeDatabase() {
     await executeQuery(
       `
       CREATE INDEX idx_package_number 
-      ON dbo.packages(package_number)
+      ON dbo.receipts(package_number)
     `,
       {},
       transaction
     );
 
-    console.log("Packages table initialized");
+    console.log("Receipts table initialized");
 
     await executeQuery(
       `
