@@ -108,7 +108,7 @@ router.post("/", async (req, res) => {
   const query = `
       INSERT INTO receipts (package_number) 
       VALUES (@package_number);
-      SELECT * FROM packages WHERE package_number = @package_number;
+      SELECT * FROM receipts WHERE package_number = @package_number;
     `;
 
   try {
