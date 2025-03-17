@@ -21,15 +21,6 @@ async function initializeDatabase() {
 
     await executeQuery(
       `
-      IF OBJECT_ID('dbo.receipts', 'U') IS NOT NULL 
-        DROP TABLE dbo.receipts;
-    `,
-      {},
-      transaction
-    );
-
-    await executeQuery(
-      `
       IF OBJECT_ID('dbo.users', 'U') IS NOT NULL 
         DROP TABLE dbo.users;
     `,
@@ -39,30 +30,14 @@ async function initializeDatabase() {
 
     console.log("Existing tables dropped");
 
-    // Fixed timezone calculation: Start with UTC and convert to Warsaw
     await executeQuery(
       `
-      CREATE TABLE dbo.shipments (
+      CREATE TABLE dbo.packages (
         id INT IDENTITY(1,1) PRIMARY KEY,
         signature NVARCHAR(MAX),
-        created_at DATETIMEOFFSET DEFAULT (GETUTCDATE() AT TIME ZONE 'UTC' AT TIME ZONE 'Central European Standard Time')
-      )
-    `,
-      {},
-      transaction
-    );
-
-    console.log("Shipments table initialized");
-
-    // Fixed timezone calculation: Start with UTC and convert to Warsaw
-    await executeQuery(
-      `
-      CREATE TABLE dbo.receipts (
-        id INT IDENTITY(1,1) PRIMARY KEY,
         package_number NVARCHAR(100) NOT NULL UNIQUE,
-        signed_at DATETIMEOFFSET,
-        signature NVARCHAR(MAX),
-        created_at DATETIMEOFFSET DEFAULT (GETUTCDATE() AT TIME ZONE 'UTC' AT TIME ZONE 'Central European Standard Time')
+        created_at DATETIMEOFFSET DEFAULT (GETUTCDATE() AT TIME ZONE 'UTC' AT TIME ZONE 'Central European Standard Time'),
+        type NVARCHAR(MAX) NOT NULL
       )
     `,
       {},
@@ -72,15 +47,14 @@ async function initializeDatabase() {
     await executeQuery(
       `
       CREATE INDEX idx_package_number 
-      ON dbo.receipts(package_number)
+      ON dbo.packages(package_number)
     `,
       {},
       transaction
     );
 
-    console.log("Receipts table initialized");
+    console.log("Packages table initialized");
 
-    // Fixed timezone calculation: Start with UTC and convert to Warsaw
     await executeQuery(
       `
       CREATE TABLE dbo.users (

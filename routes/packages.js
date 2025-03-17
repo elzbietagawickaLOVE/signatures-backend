@@ -38,12 +38,14 @@ const validateSignature = [
   },
 ];
 
-router.get("/", async (req, res) => {
+router.get("/:type", async (req, res) => {
+  const { type } = req.params;
+
   const query = `
-      SELECT id, package_number, signature, signed_at FROM receipts`;
+      SELECT id, package_number, signature, signed_at FROM packages WHERE type = @id`;
 
   try {
-    const results = await executeQuery(query);
+    const results = await executeQuery(query, { type });
 
     return res.json({
       success: true,
@@ -70,7 +72,7 @@ router.delete("/:id", async (req, res) => {
   }
 
   const query = `
-      DELETE FROM receipts 
+      DELETE FROM packages 
       OUTPUT DELETED.*
       WHERE id = @id;
     `;
@@ -96,9 +98,9 @@ router.delete("/:id", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const { package_number } = req.body;
+  const { package_number, type } = req.body;
 
-  if (!package_number?.trim()) {
+  if (!package_number?.trim() && !type?.trim()) {
     return res.status(400).json({
       success: false,
       error: "Package number parameter is required",
@@ -106,26 +108,27 @@ router.post("/", async (req, res) => {
   }
 
   const query = `
-      INSERT INTO receipts (package_number) 
-      VALUES (@package_number);
-      SELECT * FROM receipts WHERE package_number = @package_number;
+      INSERT INTO packages (package_number, type) 
+      OUTPUT INSERTED.*
+      VALUES (@package_number, @type);
     `;
 
   try {
-    const result = await executeQuery(query, { package_number });
+    const result = await executeQuery(query, { package_number, type });
     return res.json({
       success: true,
-      data: result,
+      data: result[0],
     });
   } catch (err) {
     return handleDatabaseError(err, res);
   }
 });
+
 router.put("/", validateSignature, async (req, res) => {
   const { package_number, signature } = req.body;
 
   const query = `
-        UPDATE receipts
+        UPDATE packages
         SET signature = @signature, signed_at = GETUTCDATE() AT TIME ZONE 'UTC' AT TIME ZONE 'Central European Standard Time'
         OUTPUT INSERTED.*
         WHERE package_number = @package_number;
