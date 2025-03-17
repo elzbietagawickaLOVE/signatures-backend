@@ -42,7 +42,7 @@ router.get("/:type", async (req, res) => {
   const { type } = req.params;
 
   const query = `
-      SELECT id, package_number, signature, signed_at FROM packages WHERE type = @id`;
+      SELECT id, package_number, signature, signed_at FROM packages WHERE type = @type`;
 
   try {
     const results = await executeQuery(query, { type });
